@@ -1,0 +1,79 @@
+loki:
+  enabled: true
+  isDefault: true
+  url: http://{{(include "loki.serviceName" .)}}:{{ .Values.loki.service.port }}
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 45
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 45
+  datasource:
+    jsonData: "{}"
+    uid: ""
+
+  # Enable persistent volume for Loki with a specific hostPath
+  persistence:
+    enabled: true
+    storageClassName: "standard" # Optional
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    volumeClaimTemplate:
+      spec:
+        volumeMode: Filesystem
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: "standard"
+        volumeSource:
+          hostPath:
+            path: /opt/loki/data # Ruta en el servidor
+            type: DirectoryOrCreate
+
+promtail:
+  enabled: true
+  config:
+    logLevel: info
+    serverPort: 3101
+    clients:
+      - url: http://{{ .Release.Name }}:3100/loki/api/v1/push
+
+grafana:
+  enabled: true
+  sidecar:
+    datasources:
+      label: ""
+      labelValue: ""
+      enabled: true
+      maxLines: 1000
+  image:
+    tag: 10.3.3
+  service:
+    #type: NodePort
+    type: ClusterIP  ## <-- Cambiar a LoadBalancer o NodePort dependiendo de las necesidades
+
+  # Enable persistent volume for Grafana with a specific hostPath
+  persistence:
+    enabled: true
+    storageClassName: "standard" # Optional
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    volumeClaimTemplate:
+      spec:
+        volumeMode: Filesystem
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: "standard"
+        volumeSource:
+          hostPath:
+            path: /opt/grafana/data # Ruta en el servidor
+            type: DirectoryOrCreate

@@ -1,0 +1,23 @@
+# Implementación/Configuración de Jenkins en Kubernetes mediante ArgoCD
+# Autor: Francisco Javier Gutierrez | Unix/Linux Architect & Cloud Engineer
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jenkins
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://el-repositorio-git-del-banco.git'
+    targetRevision: HEAD
+    path: 'ruta/del/directorio-contiene-manifiestos-jenkins/'
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
